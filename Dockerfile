@@ -1,0 +1,31 @@
+# Use Python 3.12.3 as the base image
+FROM python:3.12.3-slim
+
+# Set the working directory
+WORKDIR /app
+
+# Create logs directory
+RUN mkdir -p logs
+
+# Copy the requirements file into the container
+COPY requirements.txt .
+
+# Install the required packages
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the application code into the container
+COPY . .
+
+# Set environment variables
+ENV FLASK_APP=run.py
+ENV FLASK_RUN_HOST=0.0.0.0
+ENV FLASK_RUN_PORT=5001
+
+# Install Gunicorn
+RUN pip install gunicorn
+
+# Expose the necessary ports
+EXPOSE 5001
+
+# Run the application with Gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:5001", "run:app", "--timeout", "300"]

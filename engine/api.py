@@ -21,7 +21,12 @@ def buy_me_a_coffee():
 @api.route('/ver', methods=['GET'])
 def version():
     log_event()
-    return jsonify({"version": "2.1", "author":"Piotr Romanowski","compiled":"11-06-2025 17:53","served_by":os.uname()[2]})
+    return jsonify({"version": "2.1", "author":"Piotr Romanowski","compiled":"11-06-2025 17:53","served_by":os.uname()[2], "container":os.path.exists('/.dockerenv')})
+
+@api.route('/health', methods=['GET'])
+def health():
+    log_event()
+    return jsonify({"status": "ok"})
 
 @api.route('/v1/embeddings', methods=['POST'])
 def create_embedding():

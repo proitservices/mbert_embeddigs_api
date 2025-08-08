@@ -1,32 +1,26 @@
-# Use Python 3.11.9 as the base image
 FROM python:3.11.9-slim
 
-# Set the working directory
 WORKDIR /app
 
-# Create logs directory
 RUN mkdir -p logs
 
-# Copy the requirements file into the container
 COPY requirements.txt .
 
-# Install non-PyTorch packages from PyPI
-RUN pip install --no-cache-dir flask==3.0.3 gunicorn==22.0.0 transformers==4.48.0 numpy==1.26.4
-
-# Install torch from PyTorch CPU index
 RUN pip install --no-cache-dir torch==2.3.0 --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application code into the container
-COPY . .
+COPY run.py .
+COPY engine/ engine/
 
-# Set environment variables
 ENV FLASK_APP=run.py
 ENV FLASK_RUN_HOST=0.0.0.0
 ENV FLASK_RUN_PORT=5001
-ENV HF_HOME=/root/.cache/huggingface
+ENV HF_HOME=/model_cache
 
-# Expose the necessary ports
 EXPOSE 5001
 
-# Run the application with Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5001", "run:app", "--timeout", "300"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:5001/health || exit 1
+
+CMD ["gunicorn", "--bind", "0.0.0.0:5001", "run:app", "--timeout", "300", "--log-file=/app/logs/gunicorn.log"]
+
